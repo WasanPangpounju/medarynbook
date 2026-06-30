@@ -101,7 +101,7 @@ export async function sendNewOrderEmail(order: NewOrderEmailParams) {
 </html>`;
 
   const { data, error } = await resend.emails.send({
-    from: "Medaryn Book <onboarding@resend.dev>", // TODO: เปลี่ยนเป็น verified domain หลัง verify medarynbook.com ใน Resend
+    from: "Medaryn Book <orders@medarynbook.com>",
     to: "friendlydev.net@gmail.com",
     subject: `[Medaryn] คำสั่งซื้อใหม่ #${order.orderId} — ${order.customerName}`,
     html,
@@ -162,7 +162,7 @@ export async function sendCustomerConfirmationEmail(order: NewOrderEmailParams) 
   `;
 
   const { data, error } = await resend.emails.send({
-    from: "Medaryn Book <onboarding@resend.dev>",
+    from: "Medaryn Book <orders@medarynbook.com>",
     to: order.customerEmail,
     subject: `ยืนยันคำสั่งซื้อ #${order.orderId} — Medaryn Book`,
     html,
