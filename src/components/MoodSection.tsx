@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { books as defaultBooks, defaultBadgeStyleMap } from "@/data/content";
 import type { Book, BadgeStyleMap } from "@/data/content";
@@ -55,15 +56,24 @@ export default function MoodSection({
             <>
               <div
                 className="relative aspect-[2/3] rounded-l-[3px] rounded-r-[7px] shadow-md transition-transform duration-300 group-hover:-translate-y-[3px]"
-                style={{ backgroundColor: book.bg }}
+                style={{ backgroundColor: book.coverImage ? undefined : book.bg }}
               >
+                {book.coverImage && (
+                  <Image
+                    src={book.coverImage}
+                    alt={book.title}
+                    fill
+                    className="object-cover rounded-l-[3px] rounded-r-[7px]"
+                    sizes="(max-width: 768px) 50vw, 25vw"
+                  />
+                )}
                 {book.badge && (
                   <span
                     style={{
                       backgroundColor: badgeStyle?.bgColor ?? "#4E7358",
                       color: badgeStyle?.textColor ?? "#ffffff",
                     }}
-                    className="absolute top-2 left-2 text-[10.5px] px-2 py-0.5 rounded"
+                    className="absolute top-2 left-2 z-10 text-[10.5px] px-2 py-0.5 rounded"
                   >
                     {book.badge}
                   </span>

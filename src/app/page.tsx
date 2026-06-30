@@ -76,7 +76,8 @@ export default async function Home() {
           price: book.price != null ? String(book.price) : "",
           originalPrice: book.originalPrice != null ? String(book.originalPrice) : "",
           badge: book.badge === "ใหม่" || book.badge === "ขายดี" ? book.badge : null,
-          bg: book.coverImage ?? book.bg ?? "#7a6b55",
+          bg: book.bg ?? "#7a6b55",
+          coverImage: book.coverImage ?? null,
           url: book.url ?? fallbackBooks[index % fallbackBooks.length].url,
         }))
       : fallbackBooks;

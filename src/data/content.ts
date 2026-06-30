@@ -27,6 +27,7 @@ export type Book = {
   originalPrice: string;
   badge: "ใหม่" | "ขายดี" | null;
   bg: string;
+  coverImage?: string | null;
   url: string;
 };
 
