@@ -1,65 +1,181 @@
-import Image from "next/image";
+import Navbar from "@/components/Navbar";
+import HeroSection from "@/components/HeroSection";
+import PromoBar from "@/components/PromoBar";
+import MoodSection from "@/components/MoodSection";
+import PromoCards from "@/components/PromoCards";
+import ShoppingSection from "@/components/ShoppingSection";
+import RightsSection from "@/components/RightsSection";
+import ContactSection from "@/components/ContactSection";
+import Footer from "@/components/Footer";
+import {
+  getBooks,
+  getPromos,
+  getSlides,
+  getSiteSettings,
+  getMoods,
+  getBadgeStyles,
+} from "@/sanity/queries";
+import {
+  hero as fallbackHero,
+  promoBar as fallbackPromoBar,
+  books as fallbackBooks,
+  promos as fallbackPromos,
+  slides as fallbackSlides,
+  shopping as fallbackShopping,
+  rights as fallbackRights,
+  contact as fallbackContact,
+  footer as fallbackFooter,
+} from "@/data/content";
+import type {
+  Book,
+  HeroContent,
+  Promo,
+  PromoBarContent,
+  Slide,
+  ShoppingChannel,
+  RightsContent,
+  ContactEntry,
+  FooterContent,
+  SocialLink,
+} from "@/data/content";
+import { defaultBadgeStyleMap } from "@/data/content";
+import type { BadgeStyleMap } from "@/data/content";
 
-export default function Home() {
+// ISR: revalidate this page's Sanity data every 60 seconds without a rebuild.
+export const revalidate = 60;
+
+function mergeDefined<T extends object>(fallback: T, override?: Partial<Record<keyof T, string>>): T {
+  if (!override) return fallback;
+  const result = { ...fallback };
+  for (const key of Object.keys(override) as (keyof T)[]) {
+    const value = override[key];
+    if (typeof value === "string" && value.trim() !== "") {
+      result[key] = value as T[keyof T];
+    }
+  }
+  return result;
+}
+
+export default async function Home() {
+  const [sanityBooks, sanityPromos, sanitySlides, sanitySettings, sanityMoods, sanityBadges] = await Promise.all([
+    getBooks(),
+    getPromos(),
+    getSlides(),
+    getSiteSettings(),
+    getMoods(),
+    getBadgeStyles(),
+  ]);
+
+  const totalBooks = sanityBooks && sanityBooks.length > 0 ? sanityBooks.length : fallbackBooks.length;
+  const books: Book[] =
+    sanityBooks && sanityBooks.length > 0
+      ? sanityBooks.slice(0, 8).map((book, index) => ({
+          id: book.id,
+          title: book.title,
+          author: book.author ?? "",
+          price: book.price != null ? String(book.price) : "",
+          originalPrice: book.originalPrice != null ? String(book.originalPrice) : "",
+          badge: book.badge === "ใหม่" || book.badge === "ขายดี" ? book.badge : null,
+          bg: book.coverImage ?? book.bg ?? "#7a6b55",
+          url: book.url ?? fallbackBooks[index % fallbackBooks.length].url,
+        }))
+      : fallbackBooks;
+
+  const badgeStyleMap: BadgeStyleMap =
+    sanityBadges && sanityBadges.length > 0
+      ? Object.fromEntries(
+          sanityBadges.map((b) => [b.label, { bgColor: b.bgColor, textColor: b.textColor }])
+        )
+      : defaultBadgeStyleMap;
+
+  const FALLBACK_MOODS = ["คืนฝนตก", "เรื่องรักอบอุ่น", "สืบสวน", "เยาวชน", "วรรณกรรมไทย"];
+  const moods: string[] =
+    sanityMoods && sanityMoods.length > 0
+      ? sanityMoods.map((m) => m.label)
+      : FALLBACK_MOODS;
+
+  const promos: Promo[] =
+    sanityPromos && sanityPromos.length > 0
+      ? sanityPromos.map((promo, index) => ({
+          title: promo.title,
+          desc: promo.description ?? "",
+          cta: promo.cta ?? "ดูโปรโมชั่น",
+          bg: promo.bgColor ?? fallbackPromos[index % fallbackPromos.length].bg,
+          btnColor: promo.btnColor ?? fallbackPromos[index % fallbackPromos.length].btnColor,
+          url: promo.url ?? "#",
+        }))
+      : fallbackPromos;
+
+  const slides: Slide[] =
+    sanitySlides && sanitySlides.length > 0
+      ? sanitySlides.map((slide, index) => ({
+          src: slide.src,
+          caption: slide.caption ?? fallbackSlides[index % fallbackSlides.length].caption,
+          url: slide.url ?? "#",
+        }))
+      : fallbackSlides;
+
+  const hero: HeroContent = mergeDefined(fallbackHero, sanitySettings?.hero);
+  const promoBar: PromoBarContent = mergeDefined(fallbackPromoBar, sanitySettings?.promoBar);
+
+  const shopping: ShoppingChannel[] =
+    sanitySettings?.shopping && sanitySettings.shopping.length > 0
+      ? sanitySettings.shopping.map((ch) => ({
+          name: ch.name ?? "",
+          desc: ch.desc ?? "",
+          tag: ch.tag ?? "",
+          url: ch.url ?? "#",
+          icon: (ch.icon ?? "shoppingCart") as ShoppingChannel["icon"],
+        }))
+      : fallbackShopping;
+
+  const rights: RightsContent = {
+    label: sanitySettings?.rights?.label || fallbackRights.label,
+    title: sanitySettings?.rights?.title || fallbackRights.title,
+    desc: sanitySettings?.rights?.desc || fallbackRights.desc,
+    genres: sanitySettings?.rights?.genres?.length
+      ? sanitySettings.rights.genres
+      : fallbackRights.genres,
+    ctaText: sanitySettings?.rights?.ctaText || fallbackRights.ctaText,
+    ctaUrl: sanitySettings?.rights?.ctaUrl || fallbackRights.ctaUrl,
+  };
+
+  const contact: ContactEntry[] =
+    sanitySettings?.contact && sanitySettings.contact.length > 0
+      ? sanitySettings.contact.map((entry) => ({
+          icon: (entry.icon ?? "mail") as ContactEntry["icon"],
+          label: entry.label ?? "",
+          value: entry.value ?? [],
+        }))
+      : fallbackContact;
+
+  const footerSocial: SocialLink[] =
+    sanitySettings?.footer?.social && sanitySettings.footer.social.length > 0
+      ? sanitySettings.footer.social.map((s) => ({
+          label: s.label ?? "",
+          icon: (s.icon ?? "facebook") as SocialLink["icon"],
+          href: s.href ?? "#",
+        }))
+      : fallbackFooter.social;
+
+  const footer: FooterContent = {
+    social: footerSocial,
+    copyright: sanitySettings?.footer?.copyright || fallbackFooter.copyright,
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+    <>
+      <Navbar />
+      <main className="flex-1">
+        <HeroSection hero={hero} slides={slides} />
+        <PromoBar promoBar={promoBar} />
+        <MoodSection books={books} badgeStyleMap={badgeStyleMap} moods={moods} showViewAll={totalBooks > 8} />
+        <PromoCards promos={promos} />
+        <ShoppingSection shopping={shopping} />
+        <RightsSection rights={rights} />
+        <ContactSection contact={contact} />
       </main>
-    </div>
+      <Footer footer={footer} />
+    </>
   );
 }
