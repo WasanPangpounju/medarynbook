@@ -26,13 +26,38 @@ export const siteSettings = defineType({
     }),
     defineField({
       name: "promoBar",
-      title: "แถบโปรโมชั่น",
+      title: "แถบโปรโมชั่น (PromoBar)",
       type: "object",
       fields: [
+        defineField({
+          name: "isActive",
+          title: "เปิดใช้งาน",
+          type: "boolean",
+          initialValue: false,
+        }),
         defineField({ name: "badge", title: "ป้ายกำกับ", type: "string" }),
-        defineField({ name: "text", title: "ข้อความ", type: "string" }),
+        defineField({
+          name: "text",
+          title: "ข้อความ",
+          type: "string",
+          description:
+            "เช่น ฉลองเปิดร้านมีของที่ระลึกทุกออเดอร์ — โค้ด NEWMEDA | ซื้อครบ 399 ส่งฟรี",
+        }),
         defineField({ name: "code", title: "โค้ดส่วนลด", type: "string" }),
         defineField({ name: "shipping", title: "เงื่อนไขจัดส่ง", type: "string" }),
+        defineField({
+          name: "bgColor",
+          title: "สีพื้นหลัง",
+          type: "string",
+          initialValue: "#4E7358",
+        }),
+        defineField({
+          name: "textColor",
+          title: "สีตัวอักษร",
+          type: "string",
+          initialValue: "#ffffff",
+        }),
+        defineField({ name: "url", title: "ลิงก์ (ถ้ามี)", type: "url" }),
       ],
     }),
     defineField({

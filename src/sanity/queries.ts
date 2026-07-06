@@ -124,7 +124,16 @@ export type SanitySlide = {
 
 export type SanitySiteSettings = {
   hero?: Record<string, string>;
-  promoBar?: Record<string, string>;
+  promoBar?: {
+    isActive?: boolean;
+    badge?: string;
+    text?: string;
+    code?: string;
+    shipping?: string;
+    bgColor?: string;
+    textColor?: string;
+    url?: string;
+  };
   shopping?: Array<{
     name?: string;
     desc?: string;

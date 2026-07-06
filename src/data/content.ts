@@ -13,10 +13,14 @@ export type HeroContent = {
 };
 
 export type PromoBarContent = {
-  badge: string;
+  isActive: boolean;
+  badge?: string;
   text: string;
-  code: string;
-  shipping: string;
+  code?: string;
+  shipping?: string;
+  bgColor?: string;
+  textColor?: string;
+  url?: string;
 };
 
 export type Book = {
@@ -105,10 +109,13 @@ export const hero: HeroContent = {
 };
 
 export const promoBar: PromoBarContent = {
+  isActive: true,
   badge: "SPECIAL",
   text: "ซื้อครบ 2 เล่ม ลดเพิ่ม 15%",
   code: "PAIR15",
   shipping: "จัดส่งฟรีเมื่อซื้อครบ 399 บาท",
+  bgColor: "#4E7358",
+  textColor: "#ffffff",
 };
 
 export const books: Book[] = [

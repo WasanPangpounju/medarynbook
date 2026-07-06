@@ -117,7 +117,18 @@ export default async function Home() {
       : fallbackSlides;
 
   const hero: HeroContent = mergeDefined(fallbackHero, sanitySettings?.hero);
-  const promoBar: PromoBarContent = mergeDefined(fallbackPromoBar, sanitySettings?.promoBar);
+
+  const sanityPromoBar = sanitySettings?.promoBar;
+  const promoBar: PromoBarContent = {
+    isActive: sanityPromoBar?.isActive ?? fallbackPromoBar.isActive,
+    badge: sanityPromoBar?.badge || fallbackPromoBar.badge,
+    text: sanityPromoBar?.text || fallbackPromoBar.text,
+    code: sanityPromoBar?.code || fallbackPromoBar.code,
+    shipping: sanityPromoBar?.shipping || fallbackPromoBar.shipping,
+    bgColor: sanityPromoBar?.bgColor || fallbackPromoBar.bgColor,
+    textColor: sanityPromoBar?.textColor || fallbackPromoBar.textColor,
+    url: sanityPromoBar?.url || fallbackPromoBar.url,
+  };
 
   const shopping: ShoppingChannel[] =
     sanitySettings?.shopping && sanitySettings.shopping.length > 0
