@@ -42,10 +42,6 @@ export const DELIVERY_FEES: Record<DeliveryMethod, number> = {
   ems: 80,
 };
 
-export const PROMO_CODES: Record<string, number> = {
-  PAIR15: 0.15,
-};
-
 function safeParse<T>(value: string | null, fallback: T): T {
   if (!value) return fallback;
   try {

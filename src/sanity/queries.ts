@@ -199,6 +199,42 @@ export async function getShippingConfig() {
   );
 }
 
+export type SanityPromoCondition = {
+  conditionType: "minAmount" | "minQuantity" | "none";
+  value: number;
+  errorMessage?: string;
+};
+
+export type SanityPromoCode = {
+  _id: string;
+  code: string;
+  description?: string;
+  discountType: "percent" | "fixed" | "gift" | "freeshipping";
+  discountValue: number;
+  giftDescription?: string;
+  conditions?: SanityPromoCondition[];
+  isActive: boolean;
+  maxUses: number;
+  usedCount: number;
+  expiresAt?: string;
+};
+
+export async function getPromoCodeByCode(code: string) {
+  if (!sanityClient) return null;
+  try {
+    return await sanityClient.fetch<SanityPromoCode | null>(
+      `*[_type == "promoCode" && code == $code][0] {
+        _id, code, description, discountType, discountValue,
+        giftDescription, conditions, isActive, maxUses, usedCount, expiresAt
+      }`,
+      { code },
+      { cache: "no-store" }
+    );
+  } catch {
+    return null;
+  }
+}
+
 export type SanityBadgeStyle = {
   label: string;
   bgColor?: string;

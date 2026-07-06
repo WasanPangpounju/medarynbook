@@ -7,7 +7,6 @@ import Footer from "@/components/Footer";
 import StepIndicator from "@/components/StepIndicator";
 import {
   clearCart,
-  PROMO_CODES,
   formatBaht,
   generateOrderId,
   getCart,
@@ -19,6 +18,17 @@ import {
   type DeliveryMethod,
   type PaymentMethod,
 } from "@/lib/cart";
+
+type PromoValidationResponse = {
+  valid: boolean;
+  code?: string;
+  discountType?: "percent" | "fixed" | "gift" | "freeshipping";
+  discountValue?: number;
+  discountAmount?: number;
+  giftDescription?: string | null;
+  description?: string | null;
+  message?: string;
+};
 
 type ShippingConfig = {
   registeredFee: number;
@@ -63,6 +73,8 @@ export default function CheckoutPage() {
   const [promoInput, setPromoInput] = useState("");
   const [promoCode, setPromoCode] = useState<string | null>(null);
   const [promoError, setPromoError] = useState<string | null>(null);
+  const [discount, setDiscount] = useState(0);
+  const [freeShippingFromPromo, setFreeShippingFromPromo] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [shippingConfig, setShippingConfig] = useState<ShippingConfig>(defaultShippingConfig);
 
@@ -91,9 +103,10 @@ export default function CheckoutPage() {
     return 0;
   };
 
-  const shippingFee = calculateShipping(deliveryMethod, subtotal);
-  const discountRate = promoCode ? PROMO_CODES[promoCode] : 0;
-  const discount = Math.round(subtotal * discountRate);
+  const displayShippingFee = (method: DeliveryMethod) =>
+    freeShippingFromPromo ? 0 : calculateShipping(method, subtotal);
+
+  const shippingFee = displayShippingFee(deliveryMethod);
   const total = subtotal - discount + shippingFee;
 
   function handleIncrease(item: CartItem) {
@@ -111,15 +124,34 @@ export default function CheckoutPage() {
     setCart(getCart());
   }
 
-  function applyPromoCode() {
+  async function applyPromoCode() {
     const code = promoInput.trim().toUpperCase();
     if (!code) return;
-    if (PROMO_CODES[code]) {
-      setPromoCode(code);
-      setPromoError(null);
-    } else {
+
+    const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+    try {
+      const res = await fetch(
+        `/api/promo?code=${encodeURIComponent(code)}&subtotal=${subtotal}&quantity=${totalQuantity}`
+      );
+      const data: PromoValidationResponse = await res.json();
+
+      if (data.valid) {
+        setPromoCode(data.code ?? code);
+        setDiscount(data.discountAmount ?? 0);
+        setFreeShippingFromPromo(data.discountType === "freeshipping");
+        setPromoError(null);
+      } else {
+        setPromoCode(null);
+        setDiscount(0);
+        setFreeShippingFromPromo(false);
+        setPromoError(data.message ?? "โค้ดส่วนลดไม่ถูกต้อง");
+      }
+    } catch {
       setPromoCode(null);
-      setPromoError("โค้ดส่วนลดไม่ถูกต้อง");
+      setDiscount(0);
+      setFreeShippingFromPromo(false);
+      setPromoError("ไม่สามารถตรวจสอบโค้ดส่วนลดได้ในขณะนี้");
     }
   }
 
@@ -266,9 +298,9 @@ export default function CheckoutPage() {
                     onChange={() => setDeliveryMethod("registered")}
                     label="ไปรษณีย์ลงทะเบียน"
                     price={
-                      calculateShipping("registered", subtotal) === 0
+                      displayShippingFee("registered") === 0
                         ? "ฟรี"
-                        : `฿${formatBaht(calculateShipping("registered", subtotal))}`
+                        : `฿${formatBaht(displayShippingFee("registered"))}`
                     }
                   />
                   <RadioOption
@@ -277,9 +309,9 @@ export default function CheckoutPage() {
                     onChange={() => setDeliveryMethod("ems")}
                     label="EMS"
                     price={
-                      calculateShipping("ems", subtotal) === 0
+                      displayShippingFee("ems") === 0
                         ? "ฟรี"
-                        : `฿${formatBaht(calculateShipping("ems", subtotal))}`
+                        : `฿${formatBaht(displayShippingFee("ems"))}`
                     }
                   />
                 </div>

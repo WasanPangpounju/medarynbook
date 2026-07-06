@@ -87,11 +87,17 @@ export async function POST(request: Request) {
     sendNewOrderEmail(orderPayload),
     sendCustomerConfirmationEmail(orderPayload),
     decrementStock(body.items ?? [], sanityClient),
+    incrementPromoUsage(body.promoCode, sanityClient),
   ]);
 
   results.forEach((result, i) => {
     if (result.status === "rejected") {
-      const labels = ["sendNewOrderEmail", "sendCustomerConfirmationEmail", "decrementStock"];
+      const labels = [
+        "sendNewOrderEmail",
+        "sendCustomerConfirmationEmail",
+        "decrementStock",
+        "incrementPromoUsage",
+      ];
       console.error(`${labels[i]} failed:`, result.reason);
     }
   });
@@ -165,4 +171,18 @@ async function decrementStock(
     const newQty = Math.max(0, (book.stockQuantity ?? 0) - item.quantity);
     await client.patch(book._id).set({ stockQuantity: newQty }).commit();
   }
+}
+
+async function incrementPromoUsage(
+  code: string | undefined,
+  client: NonNullable<typeof sanityClient>
+) {
+  if (!code) return;
+  const results = await client.fetch<{ _id: string }[]>(
+    `*[_type == "promoCode" && code == $code][0..0]{_id}`,
+    { code: code.toUpperCase() }
+  );
+  const promo = results[0];
+  if (!promo) return;
+  await client.patch(promo._id).inc({ usedCount: 1 }).commit();
 }
