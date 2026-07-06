@@ -1,13 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import StepIndicator from "@/components/StepIndicator";
 import {
   clearCart,
-  DELIVERY_FEES,
   PROMO_CODES,
   formatBaht,
   generateOrderId,
@@ -20,6 +19,20 @@ import {
   type DeliveryMethod,
   type PaymentMethod,
 } from "@/lib/cart";
+
+type ShippingConfig = {
+  registeredFee: number;
+  emsFee: number;
+  freeShippingThreshold: number;
+  freeShippingActive: boolean;
+};
+
+const defaultShippingConfig: ShippingConfig = {
+  registeredFee: 40,
+  emsFee: 80,
+  freeShippingThreshold: 0,
+  freeShippingActive: false,
+};
 
 type FormState = {
   firstName: string;
@@ -51,12 +64,34 @@ export default function CheckoutPage() {
   const [promoCode, setPromoCode] = useState<string | null>(null);
   const [promoError, setPromoError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [shippingConfig, setShippingConfig] = useState<ShippingConfig>(defaultShippingConfig);
+
+  useEffect(() => {
+    fetch("/api/shipping")
+      .then((r) => r.json())
+      .then((data) => setShippingConfig(data))
+      .catch(() => {}); // fallback ค่า default ถ้า API fail
+  }, []);
 
   const subtotal = useMemo(
     () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
     [cart]
   );
-  const shippingFee = DELIVERY_FEES[deliveryMethod];
+
+  const calculateShipping = (method: DeliveryMethod, amount: number) => {
+    if (
+      shippingConfig.freeShippingActive &&
+      shippingConfig.freeShippingThreshold > 0 &&
+      amount >= shippingConfig.freeShippingThreshold
+    ) {
+      return 0;
+    }
+    if (method === "registered") return shippingConfig.registeredFee;
+    if (method === "ems") return shippingConfig.emsFee;
+    return 0;
+  };
+
+  const shippingFee = calculateShipping(deliveryMethod, subtotal);
   const discountRate = promoCode ? PROMO_CODES[promoCode] : 0;
   const discount = Math.round(subtotal * discountRate);
   const total = subtotal - discount + shippingFee;
@@ -230,14 +265,22 @@ export default function CheckoutPage() {
                     checked={deliveryMethod === "registered"}
                     onChange={() => setDeliveryMethod("registered")}
                     label="ไปรษณีย์ลงทะเบียน"
-                    price="฿40"
+                    price={
+                      calculateShipping("registered", subtotal) === 0
+                        ? "ฟรี"
+                        : `฿${formatBaht(calculateShipping("registered", subtotal))}`
+                    }
                   />
                   <RadioOption
                     name="delivery"
                     checked={deliveryMethod === "ems"}
                     onChange={() => setDeliveryMethod("ems")}
                     label="EMS"
-                    price="฿80"
+                    price={
+                      calculateShipping("ems", subtotal) === 0
+                        ? "ฟรี"
+                        : `฿${formatBaht(calculateShipping("ems", subtotal))}`
+                    }
                   />
                 </div>
               </section>

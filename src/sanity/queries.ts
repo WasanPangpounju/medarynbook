@@ -184,6 +184,21 @@ export async function getMoods() {
   return fetchSanity<Array<{ label: string; _id: string }>>(moodsQuery);
 }
 
+export type SanityShippingConfig = {
+  registeredFee?: number;
+  emsFee?: number;
+  freeShippingThreshold?: number;
+  freeShippingActive?: boolean;
+};
+
+export async function getShippingConfig() {
+  return fetchSanity<SanityShippingConfig>(
+    `*[_type == "siteSettings"][0].shipping {
+      registeredFee, emsFee, freeShippingThreshold, freeShippingActive
+    }`
+  );
+}
+
 export type SanityBadgeStyle = {
   label: string;
   bgColor?: string;

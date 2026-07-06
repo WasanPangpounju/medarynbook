@@ -61,6 +61,37 @@ export const siteSettings = defineType({
       ],
     }),
     defineField({
+      name: "shipping",
+      title: "ตั้งค่าการจัดส่ง",
+      type: "object",
+      fields: [
+        defineField({
+          name: "registeredFee",
+          title: "ค่าส่ง ไปรษณีย์ลงทะเบียน (บาท)",
+          type: "number",
+          initialValue: 40,
+        }),
+        defineField({
+          name: "emsFee",
+          title: "ค่าส่ง EMS (บาท)",
+          type: "number",
+          initialValue: 80,
+        }),
+        defineField({
+          name: "freeShippingThreshold",
+          title: "ยอดซื้อขั้นต่ำสำหรับส่งฟรี (บาท, 0 = ไม่มีส่งฟรี)",
+          type: "number",
+          initialValue: 0,
+        }),
+        defineField({
+          name: "freeShippingActive",
+          title: "เปิดใช้งานส่งฟรีเมื่อซื้อครบกำหนด",
+          type: "boolean",
+          initialValue: false,
+        }),
+      ],
+    }),
+    defineField({
       name: "shopping",
       title: "ช่องทางการสั่งซื้อ",
       type: "array",
