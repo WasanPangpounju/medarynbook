@@ -10,6 +10,7 @@ export type HeroContent = {
   ctaPrimary: string;
   ctaPrimaryUrl?: string;
   ctaSecondary: string;
+  ctaSecondaryUrl?: string;
 };
 
 export type PromoBarContent = {
@@ -113,6 +114,7 @@ export const hero: HeroContent = {
   ctaPrimary: "ติดตามคำสั่งซื้อ",
   ctaPrimaryUrl: "/track",
   ctaSecondary: "ดูทั้งหมด",
+  ctaSecondaryUrl: "/bookstore",
 };
 
 export const promoBar: PromoBarContent = {

@@ -21,7 +21,13 @@ export const siteSettings = defineType({
         defineField({ name: "titleSuffix", title: "ข้อความต่อท้าย", type: "string" }),
         defineField({ name: "description", title: "คำอธิบาย", type: "text" }),
         defineField({ name: "ctaPrimary", title: "ปุ่มหลัก", type: "string" }),
-        defineField({ name: "ctaSecondary", title: "ปุ่มรอง", type: "string" }),
+        defineField({ name: "ctaSecondary", title: "ปุ่มรอง เช่น ร้านหนังสือ", type: "string" }),
+        defineField({
+          name: "ctaSecondaryUrl",
+          title: "URL ปุ่มรอง เช่น /bookstore",
+          type: "string",
+          initialValue: "/bookstore",
+        }),
       ],
     }),
     defineField({

@@ -32,12 +32,12 @@ export default function HeroSection({
           >
             {hero.ctaPrimary}
           </Link>
-          <button
-            type="button"
+          <Link
+            href={hero.ctaSecondaryUrl ?? "/bookstore"}
             className="border border-black/15 text-ink px-6 py-2.5 rounded-full hover:border-sage hover:text-sage transition-colors"
           >
             {hero.ctaSecondary}
-          </button>
+          </Link>
         </div>
       </div>
 
