@@ -7,11 +7,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import StepIndicator from "@/components/StepIndicator";
 import { formatBaht, getLastOrder, type OrderSummary } from "@/lib/cart";
-
-const BANK_ACCOUNTS = [
-  { bank: "SCB", account: "123-4-56789-0" },
-  { bank: "KBank", account: "098-7-65432-1" },
-];
+import { payment as defaultPayment, type PaymentContent } from "@/data/content";
 
 function formatCountdown(ms: number) {
   if (ms <= 0) return "00:00:00";
@@ -34,11 +30,19 @@ export default function PaymentPage() {
   const [submitting, setSubmitting] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const [copiedAccount, setCopiedAccount] = useState<string | null>(null);
+  const [paymentConfig, setPaymentConfig] = useState<PaymentContent>(defaultPayment);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/payment")
+      .then((r) => r.json())
+      .then((data) => setPaymentConfig(data))
+      .catch(() => {}); // fallback ค่า default ถ้า API fail
   }, []);
 
   const deadline = useMemo(() => {
@@ -146,9 +150,22 @@ export default function PaymentPage() {
 
                 {tab === "promptpay" ? (
                   <div className="space-y-4">
-                    <div className="flex h-48 w-48 items-center justify-center rounded-xl border border-dashed border-black/10 bg-sage-light text-sm text-muted">
-                      QR พร้อมเพย์
+                    <div className="flex h-48 w-48 items-center justify-center overflow-hidden rounded-xl border border-dashed border-black/10 bg-sage-light text-sm text-muted">
+                      {paymentConfig.qrCodeImage ? (
+                        <Image
+                          src={paymentConfig.qrCodeImage}
+                          alt="QR พร้อมเพย์"
+                          width={192}
+                          height={192}
+                          className="h-full w-full object-contain"
+                        />
+                      ) : (
+                        "QR พร้อมเพย์"
+                      )}
                     </div>
+                    {paymentConfig.promptPayNumber && (
+                      <p className="text-sm text-muted">พร้อมเพย์: {paymentConfig.promptPayNumber}</p>
+                    )}
                     <p className="text-sm font-medium text-ink">ยอดที่ต้องชำระ: ฿{formatBaht(order.total)}</p>
                     <ol className="list-decimal space-y-1 pl-5 text-sm text-muted">
                       <li>เปิดแอปธนาคารของท่าน</li>
@@ -159,21 +176,22 @@ export default function PaymentPage() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {BANK_ACCOUNTS.map((bank) => (
+                    {paymentConfig.bankAccounts.map((bank) => (
                       <div
-                        key={bank.bank}
+                        key={`${bank.bankName}-${bank.accountNumber}`}
                         className="flex items-center justify-between rounded-lg border border-black/10 px-4 py-3 text-sm"
                       >
                         <div>
-                          <p className="font-medium text-ink">{bank.bank}</p>
-                          <p className="text-muted">{bank.account}</p>
+                          <p className="font-medium text-ink">{bank.bankName}</p>
+                          {bank.accountName && <p className="text-ink">{bank.accountName}</p>}
+                          <p className="text-muted">{bank.accountNumber}</p>
                         </div>
                         <button
                           type="button"
-                          onClick={() => handleCopy(bank.account)}
+                          onClick={() => handleCopy(bank.accountNumber)}
                           className="rounded-full border border-black/10 px-3 py-1 text-xs text-ink hover:border-sage"
                         >
-                          {copiedAccount === bank.account ? "คัดลอกแล้ว" : "คัดลอก"}
+                          {copiedAccount === bank.accountNumber ? "คัดลอกแล้ว" : "คัดลอก"}
                         </button>
                       </div>
                     ))}

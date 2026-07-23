@@ -199,6 +199,30 @@ export async function getShippingConfig() {
   );
 }
 
+export type SanityBankAccount = {
+  bankName?: string;
+  accountName?: string;
+  accountNumber?: string;
+};
+
+export type SanityPaymentConfig = {
+  promptPayNumber?: string;
+  qrCodeImage?: string;
+  qrCodeImageAlt?: string;
+  bankAccounts?: SanityBankAccount[];
+};
+
+export async function getPaymentConfig() {
+  return fetchSanity<SanityPaymentConfig>(
+    `*[_type == "siteSettings"][0].payment {
+      promptPayNumber,
+      "qrCodeImage": qrCodeImage.asset->url,
+      "qrCodeImageAlt": qrCodeImage.alt,
+      bankAccounts
+    }`
+  );
+}
+
 export type SanityPromoCondition = {
   conditionType: "minAmount" | "minQuantity" | "none";
   value: number;

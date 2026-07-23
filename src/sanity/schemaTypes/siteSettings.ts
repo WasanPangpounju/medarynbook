@@ -92,6 +92,38 @@ export const siteSettings = defineType({
       ],
     }),
     defineField({
+      name: "payment",
+      title: "ข้อมูลการชำระเงิน",
+      type: "object",
+      fields: [
+        defineField({
+          name: "promptPayNumber",
+          title: "หมายเลขพร้อมเพย์",
+          type: "string",
+          description: "เบอร์โทรศัพท์ หรือเลขบัตรประชาชนที่ผูกกับพร้อมเพย์",
+        }),
+        defineField({
+          name: "qrCodeImage",
+          title: "QR Code พร้อมเพย์",
+          type: "image",
+          options: { hotspot: true },
+        }),
+        defineField({
+          name: "bankAccounts",
+          title: "บัญชีธนาคารสำหรับโอนเงิน",
+          type: "array",
+          of: [{
+            type: "object",
+            fields: [
+              defineField({ name: "bankName", title: "ธนาคาร", type: "string" }),
+              defineField({ name: "accountName", title: "ชื่อบัญชี", type: "string" }),
+              defineField({ name: "accountNumber", title: "เลขบัญชี", type: "string" }),
+            ],
+          }],
+        }),
+      ],
+    }),
+    defineField({
       name: "shopping",
       title: "ช่องทางการสั่งซื้อ",
       type: "array",

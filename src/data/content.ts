@@ -96,6 +96,18 @@ export type FooterContent = {
   copyright?: string;
 };
 
+export type BankAccount = {
+  bankName: string;
+  accountName?: string;
+  accountNumber: string;
+};
+
+export type PaymentContent = {
+  promptPayNumber: string;
+  qrCodeImage: string | null;
+  bankAccounts: BankAccount[];
+};
+
 export const hero: HeroContent = {
   brand: "MEDARYN.BOOK",
   tagline: "อัพเดทความสนุกก่อนใคร",
@@ -243,6 +255,15 @@ export const contact: ContactEntry[] = [
     value: ["กรุงเทพมหานคร", "เปิดทำการ จ–ศ 9:00–18:00"],
   },
 ];
+
+export const payment: PaymentContent = {
+  promptPayNumber: "",
+  qrCodeImage: null,
+  bankAccounts: [
+    { bankName: "SCB", accountNumber: "123-4-56789-0" },
+    { bankName: "KBank", accountNumber: "098-7-65432-1" },
+  ],
+};
 
 export const footer: FooterContent = {
   social: [
