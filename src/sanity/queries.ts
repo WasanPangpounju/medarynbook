@@ -1,6 +1,6 @@
 import { sanityClient } from "./client";
 
-export const booksQuery = `*[_type == "book"] | order(_createdAt asc) {
+export const booksQuery = `*[_type == "book"] | order(isFeatured desc, order asc, _createdAt desc) {
   "id": _id,
   "createdAt": _createdAt,
   title,
@@ -15,6 +15,7 @@ export const booksQuery = `*[_type == "book"] | order(_createdAt asc) {
   category,
   isPromotion,
   isFeatured,
+  order,
   inStock,
   stockQuantity
 }`;
@@ -75,6 +76,7 @@ export type SanityBook = {
   category?: string;
   isPromotion?: boolean;
   isFeatured?: boolean;
+  order?: number;
   inStock?: boolean;
   stockQuantity?: number;
   adaptationStatus?: string;
@@ -294,7 +296,7 @@ const bookByIdQuery = `*[_type == "book" && _id == $id][0] {
   stockQuantity
 }`;
 
-const booksByAuthorQuery = `*[_type == "book" && author == $author && _id != $id] | order(_createdAt asc) [0..2] {
+const booksByAuthorQuery = `*[_type == "book" && author == $author && _id != $id] | order(isFeatured desc, order asc, _createdAt desc) [0..2] {
   "id": _id,
   "createdAt": _createdAt,
   title,
@@ -308,6 +310,7 @@ const booksByAuthorQuery = `*[_type == "book" && author == $author && _id != $id
   category,
   isPromotion,
   isFeatured,
+  order,
   inStock,
   stockQuantity
 }`;
@@ -425,15 +428,18 @@ export type SanityRightsBook = {
   logline?: string;
   category?: string;
   availableLanguages?: string[];
+  isFeatured?: boolean;
+  order?: number;
 };
 
 export async function getRightsBooks() {
   return fetchSanity<SanityRightsBook[]>(
-    `*[_type == "book" && adaptationStatus in ["sold","available","translation"]] | order(adaptationStatus asc) {
+    `*[_type == "book" && adaptationStatus in ["sold","available","translation"]] | order(isFeatured desc, order asc, _createdAt desc) {
       "id": _id, title, author, bg,
       "coverImage": coverImage.asset->url,
       badge, adaptationStatus, adaptationType,
-      logline, category, availableLanguages
+      logline, category, availableLanguages,
+      isFeatured, order
     }`
   );
 }
@@ -519,12 +525,12 @@ export async function getAuthorBySlug(slug: string) {
 
 export async function getBooksByAuthorRef(authorId: string) {
   return fetchSanity<SanityBook[]>(
-    `*[_type == "book" && authorRef._ref == $authorId] | order(_createdAt asc) {
+    `*[_type == "book" && authorRef._ref == $authorId] | order(isFeatured desc, order asc, _createdAt desc) {
       "id": _id,
       title, author, price, originalPrice, badge,
       "coverImage": coverImage.asset->url,
       bg, category, adaptationStatus, adaptationType,
-      logline, inStock, isPromotion, stockQuantity
+      logline, inStock, isPromotion, isFeatured, order, stockQuantity
     }`,
     { authorId }
   );

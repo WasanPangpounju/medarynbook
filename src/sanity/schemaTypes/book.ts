@@ -148,6 +148,28 @@ export const book = defineType({
       type: "reference",
       to: [{ type: "author" }],
     }),
+    defineField({
+      name: "order",
+      title: "ลำดับการแสดง (น้อย = แสดงก่อน)",
+      type: "number",
+      initialValue: 999,
+      description: "กำหนดตัวเลข เช่น 1 = แสดงเป็นอันดับแรก, 2 = อันดับสอง",
+    }),
+  ],
+  orderings: [
+    {
+      title: "ลำดับที่กำหนด",
+      name: "manualOrder",
+      by: [
+        { field: "isFeatured", direction: "desc" },
+        { field: "order", direction: "asc" },
+      ],
+    },
+    {
+      title: "ใหม่สุด",
+      name: "newest",
+      by: [{ field: "_createdAt", direction: "desc" }],
+    },
   ],
   preview: {
     select: { title: "title", subtitle: "author", media: "coverImage" },
