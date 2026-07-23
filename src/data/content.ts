@@ -29,15 +29,10 @@ export type Book = {
   author: string;
   price: string;
   originalPrice: string;
-  badge: "ใหม่" | "ขายดี" | null;
+  badge: string | null;
   bg: string;
   coverImage?: string | null;
   url: string;
-};
-
-export const badgeStyles: Record<string, string> = {
-  ใหม่: "bg-sage text-white",
-  ขายดี: "bg-[#b5451b] text-white",
 };
 
 export type BadgeStyleMap = Record<string, { bgColor?: string; textColor?: string }>;

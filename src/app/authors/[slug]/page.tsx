@@ -3,7 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { getAuthorBySlug, getBooksByAuthorRef, getAuthors } from "@/sanity/queries";
+import { getAuthorBySlug, getBooksByAuthorRef, getAuthors, getBadgeStyles } from "@/sanity/queries";
+import { defaultBadgeStyleMap } from "@/data/content";
+import type { BadgeStyleMap } from "@/data/content";
 
 export const revalidate = 60;
 
@@ -43,7 +45,7 @@ type BookItem = {
   logline?: string;
 };
 
-function BookCard({ book }: { book: BookItem }) {
+function BookCard({ book, badgeStyleMap }: { book: BookItem; badgeStyleMap: BadgeStyleMap }) {
   return (
     <div className="flex gap-4 rounded-xl border border-black/5 bg-white p-4">
       <div
@@ -63,8 +65,11 @@ function BookCard({ book }: { book: BookItem }) {
       <div className="flex min-w-0 flex-col justify-center gap-1">
         {book.badge && book.badge !== "none" && (
           <span
-            className="w-fit rounded-full px-2 py-0.5 text-[10px] font-medium text-white"
-            style={{ background: book.badge === "ขายดี" ? "#b5451b" : SAGE }}
+            className="w-fit rounded-full px-2 py-0.5 text-[10px] font-medium"
+            style={{
+              backgroundColor: badgeStyleMap[book.badge]?.bgColor ?? SAGE,
+              color: badgeStyleMap[book.badge]?.textColor ?? "#ffffff",
+            }}
           >
             {book.badge}
           </span>
@@ -89,9 +94,19 @@ export default async function AuthorPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const author = await getAuthorBySlug(slug);
+  const [author, sanityBadges] = await Promise.all([
+    getAuthorBySlug(slug),
+    getBadgeStyles(),
+  ]);
 
   if (!author) notFound();
+
+  const badgeStyleMap: BadgeStyleMap =
+    sanityBadges && sanityBadges.length > 0
+      ? Object.fromEntries(
+          sanityBadges.map((b) => [b.label, { bgColor: b.bgColor, textColor: b.textColor }])
+        )
+      : defaultBadgeStyleMap;
 
   const featuredBooks = author.featuredWorks ?? [];
   const refBooks = await getBooksByAuthorRef(author.id) ?? [];
@@ -393,7 +408,7 @@ export default async function AuthorPage({
             ) : (
               <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {booksToShow.map((book) => (
-                  <BookCard key={book.id} book={book} />
+                  <BookCard key={book.id} book={book} badgeStyleMap={badgeStyleMap} />
                 ))}
               </div>
             )}

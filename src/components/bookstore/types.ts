@@ -4,7 +4,7 @@ export type StoreBook = {
   author: string;
   price: number;
   originalPrice: number;
-  badge: "ใหม่" | "ขายดี" | null;
+  badge: string | null;
   coverImage: string | null;
   coverImageAlt: string;
   bg: string;

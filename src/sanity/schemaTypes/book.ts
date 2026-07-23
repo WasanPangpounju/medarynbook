@@ -30,13 +30,8 @@ export const book = defineType({
       name: "badge",
       title: "ป้ายกำกับ",
       type: "string",
-      options: {
-        list: [
-          { title: "ใหม่", value: "ใหม่" },
-          { title: "ขายดี", value: "ขายดี" },
-          { title: "ไม่มี", value: "none" },
-        ],
-      },
+      description:
+        "พิมพ์ข้อความให้ตรงกับ 'ชื่อ Badge' ที่ตั้งไว้ในรายการ Badge Style (เช่น ใหม่, ขายดี, พรีออเดอร์) หรือเว้นว่างไว้หากไม่ต้องการแสดง badge — จัดการสีและเพิ่ม badge ใหม่ได้ที่เมนู Badge Style",
     }),
     defineField({
       name: "coverImage",
@@ -102,7 +97,31 @@ export const book = defineType({
       initialValue: 0,
       validation: (r) => r.min(0).integer(),
     }),
-    defineField({ name: "synopsis", title: "เรื่องย่อ", type: "text" }),
+    defineField({
+      name: "synopsis",
+      title: "เรื่องย่อ",
+      type: "array",
+      of: [
+        {
+          type: "block",
+          styles: [
+            { title: "ปกติ", value: "normal" },
+            { title: "หัวข้อ", value: "h3" },
+            { title: "คำพูด", value: "blockquote" },
+          ],
+          lists: [
+            { title: "รายการ", value: "bullet" },
+            { title: "ลำดับเลข", value: "number" },
+          ],
+          marks: {
+            decorators: [
+              { title: "หนา", value: "strong" },
+              { title: "เอียง", value: "em" },
+            ],
+          },
+        },
+      ],
+    }),
     defineField({ name: "publishYear", title: "ปีที่พิมพ์", type: "string" }),
     defineField({
       name: "adaptationStatus",

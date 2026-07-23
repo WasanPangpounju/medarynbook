@@ -1,3 +1,4 @@
+import type { PortableTextBlock } from "@portabletext/react";
 import { sanityClient } from "./client";
 
 export const booksQuery = `*[_type == "book"] | order(isFeatured desc, order asc, _createdAt desc) {
@@ -96,7 +97,7 @@ export type SanityBookDetail = {
   coverImageAlt?: string | null;
   bg?: string;
   category?: string;
-  synopsis?: string;
+  synopsis?: PortableTextBlock[];
   publishYear?: string;
   publisher?: string;
   shopeeUrl?: string;

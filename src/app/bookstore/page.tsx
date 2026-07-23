@@ -29,7 +29,7 @@ export default async function BookstorePage() {
           author: book.author ?? "",
           price: book.price ?? 0,
           originalPrice: book.originalPrice ?? book.price ?? 0,
-          badge: book.badge === "ใหม่" || book.badge === "ขายดี" ? book.badge : null,
+          badge: book.badge && book.badge !== "none" ? book.badge : null,
           coverImage: book.coverImage ?? null,
           coverImageAlt: book.coverImageAlt ?? book.title,
           bg: book.bg ?? "#7a6b55",

@@ -1,18 +1,44 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { PortableText, type PortableTextComponents } from "@portabletext/react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BookDetailActions from "@/components/bookstore/BookDetailActions";
-import { getBookById, getBooksByAuthor } from "@/sanity/queries";
+import { getBookById, getBooksByAuthor, getBadgeStyles } from "@/sanity/queries";
 import { formatBaht } from "@/lib/cart";
+import { defaultBadgeStyleMap } from "@/data/content";
+import type { BadgeStyleMap } from "@/data/content";
+
+const synopsisComponents: PortableTextComponents = {
+  block: {
+    normal: ({ children }) => (
+      <p className="mt-3 text-sm leading-relaxed text-ink/80">{children}</p>
+    ),
+    h3: ({ children }) => (
+      <h3 className="mt-4 text-base font-medium text-ink">{children}</h3>
+    ),
+    blockquote: ({ children }) => (
+      <blockquote className="mt-3 border-l-2 border-sage pl-4 text-sm italic text-ink/70">
+        {children}
+      </blockquote>
+    ),
+  },
+  list: {
+    bullet: ({ children }) => (
+      <ul className="mt-3 list-disc space-y-1 pl-5 text-sm leading-relaxed text-ink/80">
+        {children}
+      </ul>
+    ),
+    number: ({ children }) => (
+      <ol className="mt-3 list-decimal space-y-1 pl-5 text-sm leading-relaxed text-ink/80">
+        {children}
+      </ol>
+    ),
+  },
+};
 
 export const revalidate = 60;
-
-const BADGE_STYLES: Record<string, string> = {
-  ใหม่: "bg-sage text-white",
-  ขายดี: "bg-[#b5451b] text-white",
-};
 
 export default async function BookDetailPage({
   params,
@@ -20,9 +46,19 @@ export default async function BookDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const book = await getBookById(id);
+  const [book, sanityBadges] = await Promise.all([
+    getBookById(id),
+    getBadgeStyles(),
+  ]);
 
   if (!book) notFound();
+
+  const badgeStyleMap: BadgeStyleMap =
+    sanityBadges && sanityBadges.length > 0
+      ? Object.fromEntries(
+          sanityBadges.map((b) => [b.label, { bgColor: b.bgColor, textColor: b.textColor }])
+        )
+      : defaultBadgeStyleMap;
 
   const relatedBooks = book.author
     ? await getBooksByAuthor(book.author, id)
@@ -65,9 +101,13 @@ export default async function BookDetailPage({
                     priority
                   />
                 )}
-                {book.badge && (
+                {book.badge && book.badge !== "none" && (
                   <span
-                    className={`absolute left-3 top-3 rounded px-2 py-0.5 text-[10.5px] ${BADGE_STYLES[book.badge] ?? "bg-white text-ink"}`}
+                    style={{
+                      backgroundColor: badgeStyleMap[book.badge]?.bgColor ?? "#ffffff",
+                      color: badgeStyleMap[book.badge]?.textColor ?? "#1C1C1A",
+                    }}
+                    className="absolute left-3 top-3 rounded px-2 py-0.5 text-[10.5px]"
                   >
                     {book.badge}
                   </span>
@@ -160,9 +200,11 @@ export default async function BookDetailPage({
           <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
             <div className="md:col-span-2">
               <h2 className="text-lg font-medium text-ink">เรื่องย่อ</h2>
-              <p className="mt-3 text-sm leading-relaxed text-ink/80">
-                {book.synopsis ?? "ไม่มีเรื่องย่อ"}
-              </p>
+              {book.synopsis && book.synopsis.length > 0 ? (
+                <PortableText value={book.synopsis} components={synopsisComponents} />
+              ) : (
+                <p className="mt-3 text-sm leading-relaxed text-ink/80">ไม่มีเรื่องย่อ</p>
+              )}
             </div>
 
             <div className="rounded-xl border border-black/5 bg-white p-6">
