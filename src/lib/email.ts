@@ -26,6 +26,7 @@ type NewOrderEmailParams = {
   discount?: number;
   total?: number;
   promoCode?: string;
+  sanityError?: boolean;
 };
 
 export async function sendNewOrderEmail(order: NewOrderEmailParams) {
@@ -49,6 +50,22 @@ export async function sendNewOrderEmail(order: NewOrderEmailParams) {
     order.shippingAddress?.zipcode,
   ].filter(Boolean);
 
+  const sanityWarning = order.sanityError
+    ? `
+      <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:12px 16px;margin-bottom:16px;">
+        <p style="margin:0;color:#856404;font-weight:bold;">
+          ⚠️ บันทึกลง Sanity ไม่สำเร็จ
+        </p>
+        <p style="margin:4px 0 0;color:#856404;font-size:13px;">
+          Order นี้ไม่ได้ถูกบันทึกใน Sanity Studio — กรุณาปรับ stock ด้วยตนเองและบันทึก order ภายหลัง
+        </p>
+        <p style="margin:4px 0 0;color:#856404;font-size:13px;">
+          Order ID: ${order.orderId}
+        </p>
+      </div>
+    `
+    : "";
+
   const html = `<!DOCTYPE html>
 <html lang="th">
 <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /></head>
@@ -60,6 +77,7 @@ export async function sendNewOrderEmail(order: NewOrderEmailParams) {
     </div>
 
     <div style="padding:24px 32px;">
+      ${sanityWarning}
       <h2 style="font-size:14px;font-weight:600;margin:0 0 12px;color:#4e7358;">ข้อมูลลูกค้า</h2>
       <table style="width:100%;font-size:13px;border-collapse:collapse;">
         <tr><td style="padding:3px 0;color:#888;width:120px;">ชื่อ</td><td>${order.customerName}</td></tr>

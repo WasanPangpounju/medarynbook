@@ -97,7 +97,7 @@ export async function POST(request: Request) {
   if (sanityError) {
     try {
       await Promise.allSettled([
-        sendNewOrderEmail(orderPayload),
+        sendNewOrderEmail({ ...orderPayload, sanityError: true }),
         sendCustomerConfirmationEmail(orderPayload),
       ]);
     } catch (err) {
