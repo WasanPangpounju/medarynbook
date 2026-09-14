@@ -48,25 +48,6 @@ export async function POST(request: Request) {
     _key: randomUUID(),
   }));
 
-  const doc = await sanityClient.create({
-    _type: "order",
-    orderId: body.orderId,
-    customerName: body.customerName,
-    customerEmail: body.customerEmail,
-    customerPhone: body.customerPhone,
-    shippingAddress: body.shippingAddress,
-    deliveryMethod: body.deliveryMethod,
-    paymentMethod: body.paymentMethod,
-    items: itemsWithKeys,
-    subtotal: body.subtotal,
-    shippingFee: body.shippingFee,
-    discount: body.discount,
-    total: body.total,
-    promoCode: body.promoCode,
-    status: "pending_payment",
-    createdAt: new Date().toISOString(),
-  });
-
   const orderPayload = {
     orderId: body.orderId,
     customerName: body.customerName,
@@ -82,6 +63,49 @@ export async function POST(request: Request) {
     total: body.total,
     promoCode: body.promoCode,
   };
+
+  let orderId = body.orderId ?? `ORD-${Date.now()}`;
+  let sanityError = false;
+  let doc: Awaited<ReturnType<typeof sanityClient.create>> | undefined;
+
+  try {
+    doc = await sanityClient.create({
+      _type: "order",
+      orderId: body.orderId,
+      customerName: body.customerName,
+      customerEmail: body.customerEmail,
+      customerPhone: body.customerPhone,
+      shippingAddress: body.shippingAddress,
+      deliveryMethod: body.deliveryMethod,
+      paymentMethod: body.paymentMethod,
+      items: itemsWithKeys,
+      subtotal: body.subtotal,
+      shippingFee: body.shippingFee,
+      discount: body.discount,
+      total: body.total,
+      promoCode: body.promoCode,
+      status: "pending_payment",
+      createdAt: new Date().toISOString(),
+    });
+    orderId = doc.orderId ?? orderId;
+  } catch (err) {
+    console.error("Sanity create failed:", err);
+    sanityError = true;
+    // ไม่ throw — ดำเนินการต่อเพื่อส่งอีเมลด้วยข้อมูลจาก request body
+  }
+
+  if (sanityError) {
+    try {
+      await Promise.allSettled([
+        sendNewOrderEmail(orderPayload),
+        sendCustomerConfirmationEmail(orderPayload),
+      ]);
+    } catch (err) {
+      console.error("Email failed:", err);
+    }
+
+    return NextResponse.json({ success: true, orderId, sanityError: true }, { status: 200 });
+  }
 
   const results = await Promise.allSettled([
     sendNewOrderEmail(orderPayload),
