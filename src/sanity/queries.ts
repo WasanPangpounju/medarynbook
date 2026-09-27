@@ -51,13 +51,17 @@ export const moodsQuery = `*[_type == "mood" && isActive == true] | order(order 
 const REVALIDATE_SECONDS = 60;
 
 async function fetchSanity<T>(query: string, params?: Record<string, unknown>): Promise<T | null> {
+  // TEMP debug: trace why pages fall back to src/data/content.ts
+  console.log("fetchSanity called:", query.slice(0, 50));
+  console.log("Sanity project:", process.env.NEXT_PUBLIC_SANITY_PROJECT_ID);
   if (!sanityClient) return null;
   try {
     return await sanityClient.fetch<T>(query, params ?? {}, {
       cache: "force-cache",
       next: { revalidate: REVALIDATE_SECONDS },
     });
-  } catch {
+  } catch (error) {
+    console.error("fetchSanity failed:", error instanceof Error ? error.message : error);
     return null;
   }
 }

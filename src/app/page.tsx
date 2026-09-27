@@ -66,6 +66,10 @@ export default async function Home() {
     getBadgeStyles(),
   ]);
 
+  // TEMP debug: trace why pages fall back to src/data/content.ts
+  console.log("books from Sanity:", sanityBooks?.length ?? "null/undefined");
+  console.log("siteSettings:", sanitySettings ? "loaded" : "null");
+
   const totalBooks = sanityBooks && sanityBooks.length > 0 ? sanityBooks.length : fallbackBooks.length;
   const books: Book[] =
     sanityBooks && sanityBooks.length > 0
